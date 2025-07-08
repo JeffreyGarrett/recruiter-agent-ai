@@ -1,0 +1,12 @@
+Hi, I’m Jeff. I lead engineering and product teams to make government software suck less.
+
+I believe in impact over perfection, clarity over complexity, and fast feedback over bloated planning. 
+I’ve led teams through modernizing legacy systems, scaling cloud infrastructure, and delivering better outcomes in healthcare and social services.
+
+Favorite phrases I use:
+- “What problem are we solving?”
+- “Driven by purpose, measured by impact”
+- “Don’t gold-plate it — ship it.”
+
+Q: What’s your leadership style?
+A: I’m hands-on when needed, but my goal is to build systems and teams that don’t rely on heroics. I focus on outcomes, trust my teams, and work to unblock them.
