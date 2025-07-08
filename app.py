@@ -103,9 +103,22 @@ nice_to_haves = st.text_area(
 )
 
 import re
+import glob
 
-with open("docs/resume.md", "r") as f:
+# Load base resume
+with open("docs/resume/resume.md", "r") as f:
     resume_text = f.read()
+
+# Load all role-specific markdown files
+role_files = sorted(glob.glob("docs/resume/resume_roles/*.md"))
+role_text = ""
+
+for filepath in role_files:
+    with open(filepath, "r") as rf:
+        role_text += "\n\n" + rf.read()
+
+# Final context for the evaluator
+full_resume_context = resume_text + "\n\n" + role_text
 
 
 if st.button("🔍 Evaluate Jeff’s Fit for This Role"):
@@ -119,9 +132,52 @@ if st.button("🔍 Evaluate Jeff’s Fit for This Role"):
                 api_key=openai_api_key
             )
 
-            # DEBUG: always show full raw result first
-            # st.markdown("### 📄 Full Evaluation Output")
-            # st.code(result, language="markdown")
+            import json
+            from datetime import datetime
+
+            # Save evaluation result to log
+            log_entry = {
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "job_description": job_description.strip(),
+                "must_haves": must_haves.strip(),
+                "nice_to_haves": nice_to_haves.strip(),
+                "resume_used": "docs/resume.md",
+                "raw_output": result
+            }
+
+            os.makedirs("logs", exist_ok=True)
+            with open("logs/evaluations.jsonl", "a") as log_file:
+                log_file.write(json.dumps(log_entry) + "\n")
+
+            # Write human-readable log summary
+            summary_log_path = "logs/evaluations_summary.md"
+
+            with open(summary_log_path, "a") as summary_file:
+                summary_file.write(f"## 🧪 Evaluation – {log_entry['timestamp']}\n\n")
+                decision_match = re.search(r"(?i)decision:\s*(.*)", result)
+                confidence_match = re.search(r"(?i)confidence.*?:\s*(\d+)", result)
+                strengths_match = re.search(r"(?i)strengths(?:.*?)[:\-]?\s*(.+?)(?=\n\s*(?:gaps|\Z))", result, re.DOTALL)
+                gaps_match = re.search(r"(?i)gaps(?:.*?)[:\-]?\s*(.+)", result, re.DOTALL)
+
+                if decision_match:
+                    summary_file.write(f"**Decision:** {decision_match.group(1).strip()}\n")
+                if confidence_match:
+                    summary_file.write(f"**Confidence:** {confidence_match.group(1).strip()}\n\n")
+
+                summary_file.write("### 📄 Job Summary\n")
+                summary_file.write(log_entry['job_description'].strip()[:500] + "...\n\n")
+
+                if strengths_match:
+                    summary_file.write("### ✅ Strengths\n")
+                    summary_file.write(strengths_match.group(1).strip() + "\n\n")
+
+                if gaps_match:
+                    summary_file.write("### ⚠️ Gaps or Unknowns\n")
+                    summary_file.write(gaps_match.group(1).strip() + "\n\n")
+
+                summary_file.write("---\n\n")
+
+        
 
             # More forgiving parsing (ignores **, :, etc.)
             decision_match = re.search(r"(?i)\**\s*decision\**.*?:\s*(.+)", result)

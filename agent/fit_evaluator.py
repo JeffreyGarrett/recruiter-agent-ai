@@ -3,9 +3,10 @@ import os
 
 def evaluate_candidate_fit(resume_text, job_description, must_haves, nice_to_haves, api_key=None):
     llm = OpenAI(
-        model="gpt-4o",
-        api_key=api_key or os.getenv("OPENAI_API_KEY")
-    )
+    model="gpt-4o",
+    api_key=api_key or os.getenv("OPENAI_API_KEY"),
+    temperature=0  # <-- Add this line
+)
 
     prompt = f"""
 You are an AI assistant helping a recruiter evaluate a candidate's fit for a role.
